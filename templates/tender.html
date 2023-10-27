@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.0.272/jspdf.debug.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+  <style>
+      .ash {
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+        text-decoration-line: underline;
+      }
+
+      form {
+        justify-content: center;
+        display: grid;
+        border-width: 1px;
+        border-style: solid;
+        margin: 9%;
+      }
+
+      .first {
+        margin-top: 3%;
+      }
+
+      .text_area {
+        margin-top: 5%;
+        font-size: larger;
+      }
+
+      .proposal {
+        margin-bottom: 2%;
+      }
+
+      .proj_plan {
+        font-size: larger;
+      }
+
+      .finance {
+        font-size: larger;
+      }
+
+      .add {
+        font-size: 1rem;
+        border-style: none;
+      }
+
+      .username {
+        font-size: 1rem;
+        border-style: none;
+      }
+
+      .email {
+        font-size: 1rem;
+        border-style: none;
+      }
+
+      .ph {
+        font-size: 1rem;
+        border-style: none;
+      }
+
+      .company {
+        font-size: x-large;
+        border-style: none;
+      }
+    </style>
+    
+    
+  </head>
+  <body>
+    {% extends "base.html" %}
+    {% load static%}
+    {% block title %}Bidfast POC{% endblock %}
+    
+    {% block content %}
+    
+    {% if user.is_authenticated %}
+    {% include "foot.html" %}
+    
+    <form id="form" action="save" method="post">
+  <div class="ash" id="tit">
+    <h2>Tender Proposal Form</h2>
+  </div>
+  <div class="row justify-content-between first">
+    <div class="col-6">
+    {% csrf_token %} 
+    <textarea id="comp" class="company" name="company" rows="1" cols="20">Ash Group of companies</textarea>
+    </div>
+    <div class="col-4">
+      <label for="date">Date: </label>
+    <input id="start" type="date" name="date">
+  </div>
+</div>
+
+{% for i in data %}
+<div class="row">
+  <div class="col-4">
+  <textarea id="name" class="username" name="username" rows="1" cols="20">{{i.user.username}}</textarea>
+  </div>
+  </div>
+
+<div class="row">
+  <div class="col-4">
+  <textarea id="email" class="email" name="email" rows="1" cols="20">{{i.user.email}}</textarea>
+  </div>
+  </div>
+
+<div class="row">
+  <div class="col-4">
+  <textarea id="ph" class="ph" name="ph" rows="1" cols="20">{{i.phone_number}}</textarea>
+  </div>
+  </div>
+
+<div class="row">
+  <div class="col-4">
+    <textarea id="add" class="add" name="add" rows="5" cols="50">{{i.address}}</textarea>
+  </div>
+  </div>
+
+
+<div class="row draggable" draggable="true">
+  <p><label id="ps_id" class="text_area" for="form_textarea">Proposal Summary:</label></p>
+</div>
+<div class="row">
+  <div class="col-12">
+    <textarea id="ps" class="ps" name="ps" rows="5" cols="90"></textarea>
+</div>
+</div>
+
+
+
+<div class="row draggable" draggable="true">
+  <p><label id="pp_id" class="proj_plan" for="form_textarea">Project Planning:</label></p>
+</div>
+<div class="row">
+  <div class="col-12">
+    <textarea id="pp" class="pp" name="pp" rows="5" cols="90"></textarea>
+</div>
+</div>
+
+
+<div class="row draggable" draggable="true">
+  <p><label id="fin_id" class="finance" for="form_textarea">Financing Details:</label></p>
+</div>
+<div class="row">
+  <div class="col-12">
+    <textarea id="fd" class="fd" name="fd" rows="5" cols="90"></textarea>
+</div>
+</div>
+
+<div class="row">
+  <button id="generatePDF">Generate</button>
+  <input type="submit" name="submit" value="Submit">
+  {% comment %} <input type="button" onclick="GeneratePdf();" value="GeneratePdf"> {% endcomment %}
+</div>
+
+
+  {% endfor %}
+</form>
+
+<script>
+  
+  var form = document.getElementById('form')
+  var btn = document.getElementById('generatePDF')
+  {% comment %} debugger {% endcomment %}
+  document.getElementById('generatePDF').addEventListener("click", myFucn);
+
+  function myFucn(){
+    event.preventDefault()
+
+    var fin_details = document.getElementById('fin_id')
+    var fin = fin_details.innerText
+
+    var pp_details = document.getElementById('pp_id')
+    var pp_name = pp_details.innerText
+
+    var ps_details = document.getElementById('ps_id')
+    var ps_name = ps_details.innerText
+
+
+    var title = document.getElementById('tit')
+    var need = title.innerText
+    var date = document.getElementById('start').value
+    var company = document.getElementById('comp').value
+    var name = document.getElementById('name').value
+    var email = document.getElementById('email').value
+    var phone = document.getElementById('ph').value
+    var add = document.getElementById('add').value
+    var ps = document.getElementById('ps').value
+    var pp = document.getElementById('pp').value
+    var fd = document.getElementById('fd').value
+    
+    var doc = new jsPDF({orientation: "p", lineHeight: 1.5})
+
+    var pageWidth = doc.internal.pageSize.width;
+    var pageHeight = doc.internal.pageSize.height;
+    var margin = 10;
+    var availableWidth = pageWidth - 2 * margin;
+    var availableHeight = pageHeight - 2 * margin;
+
+    var content = [
+    { text: 'Tender Proposal Form', fontSize: 18, alignment: 'center'},
+    {text:date, fontSize:13, alignment: 'right'},
+    {text:company, fontSize:15},
+    {text:name, fontSize:13},
+    {text:email, fontSize:13},
+    {text:phone, fontSize:13},
+    {text:add, fontSize:13},
+    {text:ps_name, fontSize:20},
+    {text:ps, fontSize:13},
+    {text:pp_name, fontSize:20},
+    {text:pp, fontSize:13},
+    {text:fin, fontSize:20},
+    {text:fd, fontSize:13},
+    ];
+    
+    var yPos = margin;
+
+    content.forEach(line => {
+      var lineHeight = line.fontSize * 1.2;
+      var textLines = doc.splitTextToSize(line.text, availableWidth);
+      var textWidth = doc.getStringUnitWidth(textLines[0]) * line.fontSize / doc.internal.scaleFactor;
+    
+      if (line.alignment === 'center') {
+        var titleX = (pageWidth - textWidth) / 2;
+        doc.setFontSize(line.fontSize);
+        doc.text(textLines, titleX, yPos);
+      } else {
+        if (yPos + (textLines.length * lineHeight) > availableHeight) {
+          doc.addPage();
+          yPos = margin;
+        }
+    
+        doc.setFontSize(line.fontSize);
+        doc.text(margin, yPos, textLines);
+        yPos += textLines.length * lineHeight;
+      }
+    });
+    
+    
+    doc.save("output.pdf")
+    
+  }
+</script>
+</body>
+{% endif %}
+{% endblock %} 
+
+
+</html>
